@@ -1,0 +1,22 @@
+CSE 452 Lab 4b
+
+Contributors:
+
+    * Alexandra Anderson  sasha708
+    * Josh Nazarin        jknaz
+
+Time Spent:
+
+    Approximately 12 hours total.
+
+Design:
+
+    Out design follows our usual Paxos scheme of getting the status of each
+    sequence number incrementally as we build our store and if a particular
+    sequence number has not yet been decided, we start it and wait, later using
+    the results to update our state. Reconfiguration occurs every tick and
+    involves getting the suggestion from the shardmaster and proposing the
+    reconfiguration like a normal operation. When it's been decided, shards are
+    migrated between groups via many RPCS prior to any new operations taking
+    place, ensuring all replicas agree about their current state for operations
+    before and after an accepted reconfiguration.

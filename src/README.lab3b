@@ -1,0 +1,12 @@
+Alexandra Anderson(sasha708)
+Josh Nazarin(jknaz)
+
+Time: 18 hours
+
+Design:
+
+This is a key-value store implemented using a Paxos library. 
+
+Our Put/Get RPC handlers must first confirm a sequence id using Paxos, then must do the ops, in order, logging per client and returning as necessary. Because one server may have many RPC's active at once, or because a client may retry on a different server, keeping the per-client result cache consistent is essential. Also, a server may fall behind, and need to force decision on some earlier RPC, which can be accomplished by starting a proposer with a No-op (get) request. 
+
+On the client side, things look basically like they did in Lab 2b. I copied/pasted almost everything. The one difference is that there isn't a view, instead, the client iteratively tries different servers until one responds. 

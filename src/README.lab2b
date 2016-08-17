@@ -1,0 +1,35 @@
+CSE 452 Lab 2b
+
+Contributors:
+
+    * Josh Nazarin        jknaz
+    * Alexandra Anderson  sasha708
+
+Time Spent:
+
+    Approximately 8 hours each.
+
+Design:
+
+    Client:
+        When our client first attempts to perform a Get/Put request, the
+        viewserver is pinged for the current view. Then, requests are sent to
+        the Primary server for that view along with unique client and request
+        IDs. If the client ever has trouble communicating with the Primary
+        server, it sleeps for a tick(), pings the viewserver for the latest
+        view, and sends the request to the Primary of the latest view.
+
+    Server:
+        Our servers are set so that any server who is not the Primary of its
+        current view will ignore any Put/Get requests. When a Primary receives a
+        request, it first checks a log for the request ID and if the ID has been
+        previously seen, and it matches the current Client ID, it will return the
+        value previously returned. If it hasn't seen the ID before, it will
+        perform the request to determine what value will be returned, forward
+        that value to any backup server, then log the request and finally return
+        to the client. Like the Primary, any server who is not the Backup of its
+        current view will ignore any forwarded requests. When a Backup receives
+        a request, it will log the returned values and, in the case of a Put
+        request, perform the request on its local key-value store. In the event
+        the Primary receives a new view from the viewserver, it will forward its
+        state to any backup server it may have.

@@ -1,0 +1,43 @@
+CSE 452 Lab 1
+
+Contributors:
+
+    * Josh Nazarin        jknaz
+    * Alexandra Anderson  sasha708
+
+Time Spent:
+
+    Approximately 5 hours working together, including learning Go and completing
+    the lab.
+
+Design:
+
+    - Part I
+
+        Map splits its value into individual words and locally counts the
+        number of times each word appears in that value. This optimization
+        reduces sequential runtime but is less noticable when executed in
+        parallel.
+
+    - Part II, III
+
+        The Master begins by creating a goroutine that endlessly waits for
+        Workers' addresses to appear on the registration channel and then places
+        them on the ready channel. This routine never returns so that a new
+        Worker can register at any time and instantly be available for a job.
+
+        The Master then creates one goroutine per map job which waits for an
+        address on the ready channel. When an address appears to a goroutine, an
+        RPC is made for the worker at that address to complete the job
+        corresponding to that goroutine. If the RPC was successful, the Master
+        is notified that a job is complete (not which job, just a job), the
+        Worker is placed back on the ready channel, and then goroutine's
+        execution ends. If the RPC was unsuccessful, the goroutine waits for
+        another Worker.
+
+        The Master waits to hear back from each goroutine, signaling the
+        completion of all Map jobs. The Reduce jobs are then completed in
+        exactly the same fashion (one goroutine per job, each goroutine
+        continually passes the job to any available Worker until it is
+        complete). After hearing back from each goroutine, all Map jobs and
+        Reduce jobs have been successfully completed.

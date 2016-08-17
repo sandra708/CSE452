@@ -1,0 +1,11 @@
+Completed by: Alexandra Anderson (sasha708) and Josh Nazarin (jknaz) 
+
+Time spent: ~ 4 hours each
+
+Design:
+
+The viewserver keeps track of some small amount of state, specifically the current view, a bool for whether that view has been acknowledged, a clock specifying how many ticks have passed since the system was started, and a map containing all servers and the time they last pinged. With this state and a small amount of if-then logic, we can implement the entire viewserver. 
+
+In tick(), we increment the clock, and check that neither the primary nor the backup has timed out. In Get(), we simply return whatever View the viewserver thinks is current, whether or not it has been ack'ed. 
+
+In Ping(), we update the map to reflect the fact that this server is alive. To find a new backup server, we iterate over the map of idle servers, returning the first one that is alive, and removing those which are dead. If this ping is an acknowledgement of the view, or it means that one of the servers in the view crashed, then we either acknowledge, transition, or crash, as appropriate. 

@@ -1,0 +1,16 @@
+Alexandra Anderson (sasha708)
+Josh Nazarin (jknaz)
+
+Hours: 10
+
+Design:
+	We need to store some paxos state client-side, which can be limited to the sequence number that we are in the process of applying, and the config number of the current configuration. It's very hard to make this atomic, so we guarentee that we have applied all ops up to that sequence, and no ops ahead of that sequence, but we may or may not have applied that particular op.
+	Therefore, we exploit idempotency properties of the operations. Get, Put, and Reconfigure are all idempotent, which is to say, we can repeat them as many times as necessary as long as we are still doing all operations in order. 
+	PutAppend is not. You get a different value if you do the same PutAppend operation at the same sequence twice versus doing it once. PutAppend, furthermore is the same as doing a Get, some computation, and a Put, in that order. So we save the result of the append (the final result that will be in the store) to a temporary file as Paxos state, along with the sequence number, before putting it into the store. Therefore, on reconstruction, we either don't have that file, in which case we know the PutAppend failed before changing the data store, or we do, in which case we can simply Put it, as the operation is now idempotent. 
+	We also keep track of the at-most-once client state on disk, and consider it to be similarly idempotent. 
+
+	We also need to keep track of the Paxos log and state on disk. We keep all of the logs that we would keep in memory - that is, every paxos sequence which has been accepted but is not yet garbage-collected. The Paxos library is given a subdirectory called ./paxos/ which will not be used by the client application (in this case, diskv). 
+
+	Our solution uses a large number of file-io helper methods, all of which are prefixed by "file" and collected together in the same part of server.go. They store, retrieve, and garbage-collect the various pieces of state that the kvstore needs to store permanently. 
+
+

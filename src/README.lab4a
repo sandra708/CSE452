@@ -1,0 +1,30 @@
+CSE 452 Lab 4a
+
+Contributors:
+
+    * Alexandra Anderson  sasha708
+    * Josh Nazarin        jknaz
+
+Time Spent:
+
+    Approximately 10 hours total.
+
+Design:
+
+    For all operations our shardmaster first gets the Paxos group to decide on a
+    sequence number for the operation, and then gets the group to carry out that
+    operation. Deciding on the sequence number of an operation simply involves
+    starting a Paxos instance on the highest sequence number used so far and
+    then waiting for the status of that operation to be decided.
+
+    Actually executing the operation is a bit more involved and requires
+    checking if the operation RPC is a repeated one, waiting for all lesser
+    sequence numbers to be decided on, updating the configuration record,
+    balancing the distribution of shards if the set of servers has changed,
+    and then notifying the Paxos group we are done with the result.
+
+    The shard load of each group is balanced by determining the ideal number of
+    shards per group (after accounting for the fact that the number of shards
+    may not be evenly divisible by the number of groups), finding which groups
+    have too few/many shards and any shards which are not yet assigned to
+    groups, and then shuffling the shards around.

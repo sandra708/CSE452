@@ -1,0 +1,47 @@
+CSE 452 Lab 3a
+
+Contributors:
+
+    * Josh Nazarin        jknaz
+    * Alexandra Anderson  sasha708
+
+Time Spent:
+
+    Approximately 12 hours combined.
+
+Design:
+
+    We are implementing a set of Paxos peers. In order to keep the
+    propose/accept state as separate as possible, we implement a "send"
+    interface which either invokes an RPC or a LPC according to the specified
+    destination.
+
+    We keep track of old Paxos instances using a map, instance number ->
+    instance. This makes it easy to garbage-collect, because we only have to
+    delete entries from the map, where using a slice would be more complex. We
+    also keep track of done sequences by mapping peer index -> highest done
+    sequence.
+
+    Start() invokes a new thread that runs the proposer side of the algorithm,
+    and returns immediately. The proposer code is all in one method,
+    px.propose(). As a note, instead of sending concurrent RPCs/LPCs, we send to
+    one peer at a time, and block until timeout. This is slower, but requires
+    slightly less reasoning about concurrency. We also piggyback sending and
+    recieving Done() information on the Decide() call, which notifies all peers
+    that a majority decision has been reached.
+
+    The acceptor's side of Paxos is implemented as RPCs which will only be
+    called by other Paxos peers, not clients. Even though every proposer has to
+    run accept code on their own proposal, we ensure isolation by invoking a LPC
+    using the same arguments as the RPC, through the same send() interface. This
+    means that propose and accept are treated as though they are on different
+    machines, even when the call is actually local.
+
+    The acceptor is implemented with three different RPCs, Propose(), Accept(),
+    and Decide(). All of these are relatively simple, as they simply create or
+    update the given Paxos instance locally, according to the Paxos protocol,
+    and are all globally locked.
+
+    Status(), Min(), and Max() simply read local state without changing
+    anything, and Done() locally updates our entry in the distributed done
+    table, returning immediately.
